@@ -6,7 +6,7 @@
 //! [ST AN4759]: https:/www.st.com%2Fresource%2Fen%2Fapplication_note%2Fdm00226326-using-the-hardware-realtime-clock-rtc-and-the-tamper-management-unit-tamp-with-stm32-microcontrollers-stmicroelectronics.pdf&usg=AOvVaw3PzvL2TfYtwS32fw-Uv37h
 
 use crate::pac::{PWR, RTC};
-use crate::rcc::{Enable, APB1, BDCR};
+use crate::rcc::{Enable, APB1, BDCR, CSR};
 use core::convert::TryInto;
 use core::fmt;
 use rtcc::{DateTimeAccess, Datelike, Hours, NaiveDate, NaiveDateTime, NaiveTime, Rtcc, Timelike};
@@ -50,14 +50,14 @@ impl Rtc {
         rtc: RTC,
         prediv_s: u16,
         prediv_a: u8,
-        bypass: bool,
         apb1: &mut APB1,
         bdcr: &mut BDCR,
         pwr: &mut PWR,
+	csr: &mut CSR,
     ) -> Self {
         let mut result = Self { rtc };
 
-        enable_lse(bdcr, bypass);
+        enable_lsi(csr);
         unlock(apb1, pwr);
         enable(bdcr);
         result.set_24h_fmt();
@@ -425,6 +425,11 @@ fn enable_lse(bdcr: &mut BDCR, bypass: bool) {
     while bdcr.bdcr().read().lserdy().bit_is_clear() {}
 }
 
+fn enable_lsi(bdcr: &mut CSR) {
+    bdcr.csr()
+        .modify(|_, w| w.lsion().set_bit());
+}
+
 fn unlock(apb1: &mut APB1, pwr: &mut PWR) {
     // Enable the backup interface by setting PWREN
     PWR::enable(apb1);
@@ -441,7 +446,7 @@ fn unlock(apb1: &mut APB1, pwr: &mut PWR) {
 fn enable(bdcr: &mut BDCR) {
     bdcr.bdcr().modify(|_, w| w.bdrst().enabled());
     bdcr.bdcr().modify(|_, w| {
-        w.rtcsel().lse();
+        w.rtcsel().lsi();
         w.rtcen().enabled();
         w.bdrst().disabled()
     });
