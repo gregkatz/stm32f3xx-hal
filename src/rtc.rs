@@ -427,11 +427,10 @@ fn enable_lse(bdcr: &mut BDCR, bypass: bool) {
 }
 
 fn enable_lsi(bdcr: &mut CSR, cr: &mut CR) {
-    cr.cr().modify(|_, w| w.hsion().set_bit());
-
-    
     bdcr.csr()
         .modify(|_, w| w.lsion().set_bit());
+    cr.cr().modify(|_, w| w.hsion().set_bit());
+
     while cr.cr().read().hsirdy().bit_is_clear() {}
 }
 
