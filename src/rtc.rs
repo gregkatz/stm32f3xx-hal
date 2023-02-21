@@ -177,7 +177,10 @@ impl DateTimeAccess for Rtc {
 
         let seconds = self.seconds()?;
         let minutes = self.minutes()?;
-        let hours = hours_to_u8(self.hours()?)?;
+	let hours_res = self.hours();
+	let hours = hours_res?;
+
+//        let hours = hours_to_u8(self.hours()?)?;
 
         Ok(
             NaiveDate::from_ymd(year.into(), month.into(), day.into()).and_hms(
