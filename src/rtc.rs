@@ -6,11 +6,10 @@
 //! [ST AN4759]: https:/www.st.com%2Fresource%2Fen%2Fapplication_note%2Fdm00226326-using-the-hardware-realtime-clock-rtc-and-the-tamper-management-unit-tamp-with-stm32-microcontrollers-stmicroelectronics.pdf&usg=AOvVaw3PzvL2TfYtwS32fw-Uv37h
 
 use crate::pac::{PWR, RTC};
-use crate::rcc::{Enable, APB1, BDCR, CSR};
+use crate::rcc::{Enable, APB1, BDCR, CSR, CR};
 use core::convert::TryInto;
 use core::fmt;
 use rtcc::{DateTimeAccess, Datelike, Hours, NaiveDate, NaiveDateTime, NaiveTime, Rtcc, Timelike};
-use stm32f3::stm32f303::rcc::CR;
 
 /// RTC error type
 #[derive(Copy, Clone, PartialEq, Eq, Debug)]
@@ -428,11 +427,12 @@ fn enable_lse(bdcr: &mut BDCR, bypass: bool) {
 }
 
 fn enable_lsi(bdcr: &mut CSR, cr: &mut CR) {
-    cr.modify(|_, w| w.hsion().set_bit());
+    cr.cr().modify(|_, w| w.hsion().set_bit());
+
     
     bdcr.csr()
         .modify(|_, w| w.lsion().set_bit());
-    while cr.read().hsirdy().bit_is_clear() {}
+    while cr.cr().read().hsirdy().bit_is_clear() {}
 }
 
 fn unlock(apb1: &mut APB1, pwr: &mut PWR) {

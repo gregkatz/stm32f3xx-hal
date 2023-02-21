@@ -91,6 +91,7 @@ impl RccExt for RCC {
             bdcr: BDCR { _0: () },
             cfgr: CFGR::default(),
 	    csr: CSR { _0: () },
+	    cr: CR {_0: () },
         }
     }
 }
@@ -117,6 +118,8 @@ pub struct Rcc {
     pub cfgr: CFGR,
     /// Control status register
     pub csr: CSR,
+    /// Control register
+    pub cr: CR,
 }
 
 /// AMBA High-performance Bus (AHB) registers
@@ -378,6 +381,19 @@ impl CSR {
     pub(crate) fn csr(&mut self) -> &rcc::CSR {
         // NOTE(unsafe) this proxy grants exclusive access to this register
         unsafe { &(*RCC::ptr()).csr }
+    }
+}
+
+/// Backup Domain Control register (RCC_BDCR)
+pub struct CR {
+    _0: (),
+}
+
+impl CR {
+    #[allow(unused)]
+    pub(crate) fn cr(&mut self) -> &rcc::CR {
+        // NOTE(unsafe) this proxy grants exclusive access to this register
+        unsafe { &(*RCC::ptr()).cr }
     }
 }
 
