@@ -10,6 +10,7 @@ use crate::rcc::{Enable, APB1, BDCR, CSR};
 use core::convert::TryInto;
 use core::fmt;
 use rtcc::{DateTimeAccess, Datelike, Hours, NaiveDate, NaiveDateTime, NaiveTime, Rtcc, Timelike};
+use stm32f3::stm32f303::rcc::CR;
 
 /// RTC error type
 #[derive(Copy, Clone, PartialEq, Eq, Debug)]
@@ -54,10 +55,11 @@ impl Rtc {
         bdcr: &mut BDCR,
         pwr: &mut PWR,
 	csr: &mut CSR,
+	cr: &mut CR,
     ) -> Self {
         let mut result = Self { rtc };
 
-        enable_lsi(csr);
+        enable_lsi(csr, cr);
         unlock(apb1, pwr);
         enable(bdcr);
         result.set_24h_fmt();
@@ -425,9 +427,12 @@ fn enable_lse(bdcr: &mut BDCR, bypass: bool) {
     while bdcr.bdcr().read().lserdy().bit_is_clear() {}
 }
 
-fn enable_lsi(bdcr: &mut CSR) {
+fn enable_lsi(bdcr: &mut CSR, cr: &mut CR) {
+    cr.modify(|_, w| w.hsion().set_bit());
+    
     bdcr.csr()
         .modify(|_, w| w.lsion().set_bit());
+    while cr.read().hsirdy().bit_is_clear() {}
 }
 
 fn unlock(apb1: &mut APB1, pwr: &mut PWR) {
