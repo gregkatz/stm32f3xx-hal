@@ -184,7 +184,7 @@ impl DateTimeAccess for Rtc {
 
         Ok(
             NaiveDate::from_ymd(year.into(), month.into(), day.into()).and_hms(
-                hours.into(),
+                4,
                 minutes.into(),
                 seconds.into(),
             ),
