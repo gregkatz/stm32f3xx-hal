@@ -169,7 +169,7 @@ impl DateTimeAccess for Rtc {
     }
 
     fn datetime(&mut self) -> Result<NaiveDateTime, Self::Error> {
-        self.set_24h_fmt();
+        self.set_24h_fmt();  //This doesn't seem to work, because we're getting 12 hour numbers back. Instead, I patched to convert to 24 hour numbers in software.
 
         let day = self.day()?;
         let month = self.month()?;
@@ -178,13 +178,12 @@ impl DateTimeAccess for Rtc {
         let seconds = self.seconds()?;
         let minutes = self.minutes()?;
 	let hours_res = self.hours();
-	let hours = hours_res?;
 
-//        let hours = hours_to_u8(self.hours()?)?;
+        let hours = hours_to_u8(self.hours()?)?;
 
         Ok(
             NaiveDate::from_ymd(year.into(), month.into(), day.into()).and_hms(
-                4,
+                hours.into(),
                 minutes.into(),
                 seconds.into(),
             ),
@@ -326,9 +325,9 @@ impl Rtcc for Rtc {
             return Ok(Hours::H24(hours as u8));
         }
         if !tr.pm().bit() {
-            return Ok(Hours::AM(hours as u8));
+            return Ok(Hours::H24(hours as u8));
         }
-        Ok(Hours::PM(hours as u8))
+        Ok(Hours::H24(12 + hours as u8))
     }
 
     fn time(&mut self) -> Result<NaiveTime, Self::Error> {
