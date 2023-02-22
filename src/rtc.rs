@@ -145,13 +145,10 @@ impl DateTimeAccess for Rtc {
         let (ht, hu) = bcd2_encode(date.hour())?;
         let (mnt, mnu) = bcd2_encode(date.minute())?;
         let (st, su) = bcd2_encode(date.second())?;
-	
-	self.rtc.wpr.write(|w| w.key().bits(0xCA)
-	);
 
-	self.rtc.wpr.write(|w| w.key().bits(0x53)
-	);
-        self.rtc.dr.write(|w| {
+	self.modify(|rtc| {
+	
+        rtc.dr.write(|w| {
             w.dt().bits(dt);
             w.du().bits(du);
             w.mt().bit(mt > 0);
@@ -160,7 +157,7 @@ impl DateTimeAccess for Rtc {
             w.yu().bits(yu)
         });
 
-        self.rtc.tr.write(|w| {
+        rtc.tr.write(|w| {
             w.ht().bits(ht);
             w.hu().bits(hu);
             w.mnt().bits(mnt);
@@ -169,8 +166,9 @@ impl DateTimeAccess for Rtc {
             w.su().bits(su);
             w.pm().clear_bit()
         });
-	self.rtc.wpr.write(|w| w.key().bits(0xff)
-	);
+
+	});
+
         Ok(())
     }
 
